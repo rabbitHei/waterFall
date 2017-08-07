@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #F7F7F7;
+			font-family: '微软雅黑';
+		}
+
+		.wrapper {
+			padding: 50px;
+		}
+
+		img {
+			display: block;
+			width: 100%;
+			height: 300px;
+		}
+
+		.items {
+			position: relative;
+		}
+
+		.item {
+			width: 228px;
+			position: absolute;
+		}
+
+		.tips {
+			width: 280px;
+			height: 40px;
+			margin: 30px auto 0;
+			text-align: center;
+			line-height: 40px;
+			background-color: #CCC;
+			border-radius: 6px;
+			font-size: 24px;
+			cursor: pointer;
+		}
+
+		.tips.loading {
+			background-color: transparent;
+		}
+	</style>
+    </head>
+    <body>
+    	<div class="wrapper">
+    		<div class="items">
+
+    		</div>
+    		<p class="tips ">加载更多</p>
+    	</div>
+		<script src="js/template-native.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery.waterFall.js"></script>
+		<script>
+			$(function(){
+				$.getData=function(num){
+					$.ajax({
+						type:'post',
+						dataType:'json',
+						url:'data.php',
+						data:{page:num},
+						beforeSend:function(){
+
+						},
+						success:function(info){
+							$('.tips').attr('page',info.page);
+							var str = template('tmp',info);
+							$('.items').append(str);
+							$('.item:last img').load(function(){
+								$('.items').waterFall();
+							});
+						},
+						error:function(err){
+
+						},
+						complete:function(){
+							$('.tips').removeClass('loading').html('加载更多');
+						}
+					});
+				}
+				//第一屏
+				$.getData(1);
+				//点击事件
+				$('.tips').on('click',function(){
+					if($(this).hasClass('loading')){
+						return false;
+					}
+					// console.log(1);
+					$(this).addClass('loading').html('正在加载....');
+					var page = $(this).attr('page');
+					$.getData(page);
+				});
+				//滚动事件
+				$(window).scroll(function(){
+					var iH = $(".items").height();
+					var iT = $(".items").offset().top;
+					var winT = $(window).scrollTop();
+					var winH = $(window).height();
+					var bD = iH+iT-winT-winH;
+					if(bD<120){
+						if($('.tips').hasClass('loading')){
+							return false;
+						}
+						$('.tips').addClass('loading').html('正在加载....');
+						var page = $('.tips').attr('page');
+						$.getData(page);
+					}
+				});
+				
+			});
+		</script>
+		<script type="text/template" id="tmp">
+			<% for( var i =0;i<items.length;i++){%>
+				<div class='item'>
+					<img src="<%= items[i].path%>"></img>
+					<p><%= items[i].text%></p>
+				</div>
+			<% } %>
+		</script>
+    </body>
+</html>
